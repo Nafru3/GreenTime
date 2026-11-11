@@ -4,23 +4,35 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarDefaults
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewScreenSizes
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.example.greentime.routes.StatsActivity
 import com.example.greentime.ui.theme.GreenTimeTheme
+import com.example.test.BarChartFilled
+import com.example.test.BarChartOutlined
+import com.example.test.GroupFilled
+import com.example.test.GroupOutlined
+import com.example.test.HomeFilled
+import com.example.test.HomeOutlined
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,58 +46,99 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@PreviewScreenSizes
-@Composable
-fun GreenTimeApp() {
-    var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
-
-    NavigationSuiteScaffold(
-        navigationSuiteItems = {
-            AppDestinations.entries.forEach {
-                item(
-                    icon = {
-                        Icon(
-                            painterResource(it.icon),
-                            contentDescription = it.label
-                        )
-                    },
-                    label = { Text(it.label) },
-                    selected = it == currentDestination,
-                    onClick = { currentDestination = it }
-                )
-            }
-        }
-    ) {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            Greeting(
-                name = "GreenTime",
-                modifier = Modifier.padding(innerPadding)
-            )
-        }
-    }
-}
-
-enum class AppDestinations(
-    val label: String,
-    val icon: Int,
-) {
-    HOME("Home", R.drawable.ic_home),
-    FAVORITES("Favorites", R.drawable.ic_favorite),
-    PROFILE("Profile", R.drawable.ic_account_box),
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
+@Preview(showBackground = true, widthDp = 412, heightDp = 915)
 @Composable
 fun GreetingPreview() {
     GreenTimeTheme {
-        Greeting("GreenTime")
+        GreenTimeApp()
+    }
+}
+
+enum class Destinations(
+    val route: String,
+    val label: String,
+    val icon: ImageVector,
+    val selectedIcon: ImageVector,
+    val contentDescription: String
+) {
+    Home(
+        route = "home",
+        label = "Accueil",
+        icon = HomeOutlined,
+        selectedIcon = HomeFilled,
+        contentDescription = "Accueil"
+    ),
+    Stats(
+        route = "stats",
+        label = "Stats",
+        icon = BarChartOutlined,
+        selectedIcon = BarChartFilled,
+        contentDescription = "Statistiques"
+    ),
+    Social(
+        route = "social",
+        label = "Social",
+        icon = GroupOutlined,
+        selectedIcon = GroupFilled,
+        contentDescription = "Social"
+    )
+}
+
+@Composable
+fun GreenTimeApp() {
+    val navController = rememberNavController()
+    val startDestination = Destinations.Home
+
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    Scaffold(
+        modifier = Modifier,
+        bottomBar = {
+            NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
+                Destinations.entries.forEachIndexed { index, destination ->
+                    val selected = currentRoute == destination.route
+
+                    NavigationBarItem(
+                        selected = selected,
+                        onClick = {
+                            navController.navigate(destination.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = if (selected) destination.selectedIcon else destination.icon,
+                                contentDescription = destination.contentDescription
+                            )
+                        },
+                        label = { Text(destination.label) }
+                    )
+                }
+            }
+        }
+    ) { contentPadding ->
+        AppNavHost(navController, startDestination, modifier = Modifier.padding(contentPadding))
+    }
+}
+
+@Composable
+fun AppNavHost(
+    navController: NavHostController,
+    startDestination: Destinations,
+    modifier: Modifier = Modifier
+) {
+    NavHost(
+        navController = navController,
+        startDestination = startDestination.route,
+        modifier = modifier
+    ) {
+        composable(Destinations.Home.route) { Text("Accueil") }
+        composable(Destinations.Stats.route) { StatsActivity() }
+        composable(Destinations.Social.route) { Text("Social") }
     }
 }
