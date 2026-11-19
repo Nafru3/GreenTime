@@ -13,9 +13,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,8 +22,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.greentime.routes.StatsActivity
 import com.example.greentime.ui.theme.GreenTimeTheme
+import com.example.greentime.views.stats.StatScreen
 import com.example.test.BarChartFilled
 import com.example.test.BarChartOutlined
 import com.example.test.GroupFilled
@@ -138,7 +135,7 @@ fun AppNavHost(
         modifier = modifier
     ) {
         composable(Destinations.Home.route) { Text("Accueil") }
-        composable(Destinations.Stats.route) { StatsActivity() }
+        composable(Destinations.Stats.route) { StatScreen() }
         composable(Destinations.Social.route) { Text("Social") }
     }
 }
