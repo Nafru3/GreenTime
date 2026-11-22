@@ -4,5 +4,6 @@ data class InstalledApp(
     val packageName: String,
     val label: String,
     val uid: Int,
-    val isSystemApp: Boolean
+    val isSystemApp: Boolean,
+    val category: AppCategory
 )

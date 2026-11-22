@@ -31,7 +31,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.greentime.ui.theme.GreenTimeTheme
-import com.example.greentime.views.AppList.AppListScreen
+import com.example.greentime.views.home.HomeScreen
 import com.example.greentime.views.permission.PermissionView
 import com.example.greentime.views.permission.PermissionViewModel
 import com.example.greentime.views.stats.StatScreen
@@ -176,7 +176,7 @@ fun AppNavHost(
         startDestination = startDestination.route,
         modifier = modifier
     ) {
-        composable(Destinations.Home.route) { AppListScreen() }
+        composable(Destinations.Home.route) { HomeScreen() }
         composable(Destinations.Stats.route) { StatScreen() }
         composable(Destinations.Social.route) { Text("Social") }
     }
