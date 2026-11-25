@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.Park
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -50,6 +51,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.greentime.ui.theme.dark_green
 import com.example.greentime.views.components.AppIcon
 import java.util.Locale
 
@@ -61,7 +63,10 @@ private val WaterBlue = Color(0xFF1E88B5)
 private val EnergyGreen = Color(0xFF2E7D32)
 
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
+fun HomeScreen(
+    viewModel: HomeViewModel = hiltViewModel(),
+    onNavigateToLimit: () -> Unit = {}
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
@@ -86,7 +91,7 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item { Greeting(state.userName) }
+            item { Greeting(state.userName, onNavigateToLimit) }
 
             when {
                 state.needsPermission -> item {
@@ -112,18 +117,30 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
 }
 
 @Composable
-private fun Greeting(name: String) {
-    Column {
-        Text(
-            "Bonjour $name 👋",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            "Voici l'impact de tes applications aujourd'hui",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+private fun Greeting(name: String, onNavigateToLimit: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                "Bonjour $name 👋",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "Voici l'impact de tes applications aujourd'hui",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Button(
+            onClick = onNavigateToLimit,
+            colors = ButtonDefaults.buttonColors(containerColor = dark_green)
+        ) {
+            Text("Limites")
+        }
     }
 }
 

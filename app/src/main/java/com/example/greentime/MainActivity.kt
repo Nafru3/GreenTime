@@ -32,8 +32,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.greentime.ui.theme.GreenTimeTheme
 import com.example.greentime.views.home.HomeScreen
+import com.example.greentime.views.limit.LimitScreen
 import com.example.greentime.views.permission.PermissionView
 import com.example.greentime.views.permission.PermissionViewModel
+import com.example.greentime.views.social.SocialView
 import com.example.greentime.views.stats.StatScreen
 import com.example.test.BarChartFilled
 import com.example.test.BarChartOutlined
@@ -131,32 +133,36 @@ fun GreenTimeApp() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    val showBottomBar = Destinations.entries.any { it.route == currentRoute }
+
     Scaffold(
         modifier = Modifier,
         bottomBar = {
-            NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
-                Destinations.entries.forEachIndexed { index, destination ->
-                    val selected = currentRoute == destination.route
+            if (showBottomBar) {
+                NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
+                    Destinations.entries.forEachIndexed { index, destination ->
+                        val selected = currentRoute == destination.route
 
-                    NavigationBarItem(
-                        selected = selected,
-                        onClick = {
-                            navController.navigate(destination.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+                        NavigationBarItem(
+                            selected = selected,
+                            onClick = {
+                                navController.navigate(destination.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = if (selected) destination.selectedIcon else destination.icon,
-                                contentDescription = destination.contentDescription
-                            )
-                        },
-                        label = { Text(destination.label) }
-                    )
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = if (selected) destination.selectedIcon else destination.icon,
+                                    contentDescription = destination.contentDescription
+                                )
+                            },
+                            label = { Text(destination.label) }
+                        )
+                    }
                 }
             }
         }
@@ -176,8 +182,13 @@ fun AppNavHost(
         startDestination = startDestination.route,
         modifier = modifier
     ) {
-        composable(Destinations.Home.route) { HomeScreen() }
+        composable(Destinations.Home.route) {
+            HomeScreen(onNavigateToLimit = { navController.navigate("limit") })
+        }
         composable(Destinations.Stats.route) { StatScreen() }
-        composable(Destinations.Social.route) { Text("Social") }
+        composable(Destinations.Social.route) { SocialView() }
+        composable("limit") { 
+            LimitScreen(onBackClick = { navController.popBackStack() })
+        }
     }
 }
