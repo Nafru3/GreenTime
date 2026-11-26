@@ -1,7 +1,6 @@
 package com.example.greentime.views.components
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,35 +13,34 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.greentime.R
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.greentime.ui.theme.dark_green
 import com.example.greentime.ui.theme.gray
 import com.example.greentime.ui.theme.light_gray
+import com.example.greentime.views.stats.StatsViewModel
 
 @Preview(showBackground = true, widthDp = 412, heightDp = 100)
 @Composable
 fun ItemApplication(
     modifier: Modifier = Modifier,
     name: String = "Youtube",
-    icon: Int = 0,
+    packageName: String = "com.google.android.youtube",
     valuePercent: Int = 50,
     valueCarbon: Double = 5.5
 ) {
+    val viewModel: StatsViewModel = hiltViewModel()
     Row(
         modifier = modifier
             .fillMaxWidth(),
-
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Image(
-            modifier = Modifier.size(40.dp),
-            painter = painterResource(id = R.drawable.youtube_logo),
-            contentDescription = "YoutubeLogo",
-
+        AppIcon(
+            packageName = packageName,
+            loadIcon = viewModel::loadIcon,
+            modifier = Modifier.size(40.dp)
         )
 
         Column(

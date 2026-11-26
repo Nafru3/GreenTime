@@ -12,10 +12,18 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -23,7 +31,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.greentime.ui.theme.GreenTimeTheme
-import com.example.greentime.views.AppList.AppListScreen
+import com.example.greentime.views.home.HomeScreen
+import com.example.greentime.views.limit.LimitScreen
+import com.example.greentime.views.permission.PermissionView
+import com.example.greentime.views.permission.PermissionViewModel
+import com.example.greentime.views.social.SocialView
 import com.example.greentime.views.stats.StatScreen
 import com.example.test.BarChartFilled
 import com.example.test.BarChartOutlined
@@ -86,38 +98,71 @@ enum class Destinations(
 
 @Composable
 fun GreenTimeApp() {
+    val context = LocalContext.current
+    val permissionViewModel = remember { PermissionViewModel() }
+    // État mémorisé pour savoir si l'accès aux stats d'utilisation est autorisé
+    var isAuthorized by remember { mutableStateOf(permissionViewModel.hasUsagePermission(context)) }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    
+    // Observer le cycle de vie pour revérifier la permission en temps réel 
+    // (ex: lorsque l'utilisateur revient des paramètres système après avoir activé l'accès)
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                // Dès que l'application redevient active, on met à jour l'état de la permission
+                isAuthorized = permissionViewModel.hasUsagePermission(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            // Nettoyage de l'observateur lorsque le composable est détruit
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    // Si la permission n'est pas accordée, on affiche UNIQUEMENT l'écran de permission (sans Scaffold ni Navbar)
+    if (!isAuthorized) {
+        PermissionView()
+        return
+    }
+
     val navController = rememberNavController()
     val startDestination = Destinations.Home
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    val showBottomBar = Destinations.entries.any { it.route == currentRoute }
+
     Scaffold(
         modifier = Modifier,
         bottomBar = {
-            NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
-                Destinations.entries.forEachIndexed { index, destination ->
-                    val selected = currentRoute == destination.route
+            if (showBottomBar) {
+                NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
+                    Destinations.entries.forEachIndexed { index, destination ->
+                        val selected = currentRoute == destination.route
 
-                    NavigationBarItem(
-                        selected = selected,
-                        onClick = {
-                            navController.navigate(destination.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+                        NavigationBarItem(
+                            selected = selected,
+                            onClick = {
+                                navController.navigate(destination.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = if (selected) destination.selectedIcon else destination.icon,
-                                contentDescription = destination.contentDescription
-                            )
-                        },
-                        label = { Text(destination.label) }
-                    )
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = if (selected) destination.selectedIcon else destination.icon,
+                                    contentDescription = destination.contentDescription
+                                )
+                            },
+                            label = { Text(destination.label) }
+                        )
+                    }
                 }
             }
         }
@@ -137,8 +182,13 @@ fun AppNavHost(
         startDestination = startDestination.route,
         modifier = modifier
     ) {
-        composable(Destinations.Home.route) { AppListScreen() }
+        composable(Destinations.Home.route) {
+            HomeScreen(onNavigateToLimit = { navController.navigate("limit") })
+        }
         composable(Destinations.Stats.route) { StatScreen() }
-        composable(Destinations.Social.route) { Text("Social") }
+        composable(Destinations.Social.route) { SocialView() }
+        composable("limit") { 
+            LimitScreen(onBackClick = { navController.popBackStack() })
+        }
     }
 }
