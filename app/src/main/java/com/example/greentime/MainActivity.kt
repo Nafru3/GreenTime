@@ -23,6 +23,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.greentime.ui.theme.GreenTimeTheme
+import com.example.greentime.views.AppList.AppListScreen
 import com.example.greentime.views.stats.StatScreen
 import com.example.test.BarChartFilled
 import com.example.test.BarChartOutlined
@@ -30,7 +31,9 @@ import com.example.test.GroupFilled
 import com.example.test.GroupOutlined
 import com.example.test.HomeFilled
 import com.example.test.HomeOutlined
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -134,7 +137,7 @@ fun AppNavHost(
         startDestination = startDestination.route,
         modifier = modifier
     ) {
-        composable(Destinations.Home.route) { Text("Accueil") }
+        composable(Destinations.Home.route) { AppListScreen() }
         composable(Destinations.Stats.route) { StatScreen() }
         composable(Destinations.Social.route) { Text("Social") }
     }
